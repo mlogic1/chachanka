@@ -10,13 +10,24 @@ namespace Chachanka
     {
         private DiscordSocketClient _client;
         private LavalinkManager _lavalinkManager;
-        private const string token = "";
+        private string token = "";
 
         static void Main(string[] args) => new Program().MainAsync().GetAwaiter().GetResult();
 
         public async Task MainAsync()
         {
             Console.WriteLine("Chachanka");
+            
+            try
+            {
+                token = GetToken();
+            }catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Environment.Exit(-1);
+            }
+            
+
             _client = new DiscordSocketClient();
             _client.Log += Log;
             _client.MessageReceived += OnMessageReceived;
@@ -24,7 +35,6 @@ namespace Chachanka
 
             await _client.LoginAsync(TokenType.Bot, token);
             await _client.StartAsync();
-
 
             // Block this task until the program is closed.
             await Task.Delay(-1);
@@ -44,7 +54,7 @@ namespace Chachanka
                 RESTPort = 2333,
                 WebSocketHost = "localhost",
                 WebSocketPort = 2333,
-                Authorization = "",
+                Authorization = "youshallnotpass1",
                 TotalShards = 1 
             });
             await _lavalinkManager.StartAsync();
