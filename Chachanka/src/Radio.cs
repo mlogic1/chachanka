@@ -25,6 +25,7 @@ namespace Chachanka
 
         private async Task PlayRadio(LavalinkPlayer player, RadioChannel channel)
         {
+            await player.StopAsync();
             LoadTracksResponse response = await _lavalinkManager.GetTracksAsync(Radios[channel]);
             LavalinkTrack track = response.Tracks.First();
             await player.PlayAsync(track);

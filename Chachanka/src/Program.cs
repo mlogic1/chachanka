@@ -17,7 +17,7 @@ namespace Chachanka
         public async Task MainAsync()
         {
             Console.WriteLine("Chachanka");
-            
+
             try
             {
                 token = GetToken();
@@ -26,7 +26,6 @@ namespace Chachanka
                 Console.WriteLine(ex.Message);
                 Environment.Exit(-1);
             }
-            
 
             _client = new DiscordSocketClient();
             _client.Log += Log;
@@ -43,6 +42,7 @@ namespace Chachanka
         private Task Log(LogMessage msg)
         {
             Console.WriteLine(msg.ToString());
+            WriteLog(msg.ToString());
             return Task.CompletedTask;
         }
 

@@ -25,55 +25,60 @@ namespace Chachanka
             }
             else if (message.Content.Equals("!otvoreni"))
             {
-                if (await JoinSenderVoiceChannel(guildID, senderID))
+                LavalinkPlayer player = _lavalinkManager.GetPlayer(guildID) ?? await JoinSenderVoiceChannel(guildID, senderID);
+                if (player == null)
                 {
-                    LavalinkPlayer player = _lavalinkManager.GetPlayer(guildID);
-                    await PlayRadio(player, RadioChannel.Otvoreni);
+                    await message.Channel.SendMessageAsync("There are no voice channels on this server");
                 }
                 else
                 {
-                    // TODO test this
-                    await message.Channel.SendMessageAsync("There are no voice channels on this server");
+                    await player.SetVolumeAsync(DefaultAudioVolume);
+                    await PlayRadio(player, RadioChannel.Otvoreni);
                 }
             }
             else if (message.Content.Equals("!radio101"))
             {
-
-            }
-            else if (message.Content.Equals("!radio"))
-            {
-                // TODO
-            }
-            else if (message.Content.Equals("!yt"))
-            {
-                IReadOnlyCollection<SocketVoiceChannel> voiceChannels = _client.GetGuild(guildID).VoiceChannels;
-                SocketVoiceChannel voiceChannelToJoin = null;
-
-                foreach(SocketVoiceChannel channel in voiceChannels)
+                LavalinkPlayer player = _lavalinkManager.GetPlayer(guildID) ?? await JoinSenderVoiceChannel(guildID, senderID);
+                if (player == null)
                 {
-                    foreach(var user in channel.Users)
-                    {
-                        if (user.Id == senderID)
-                        {
-                            voiceChannelToJoin = channel;
-                        }
-                    }
-                }
-
-                LavalinkPlayer player = null;
-                if (voiceChannelToJoin != null)
-                {
-                    player = _lavalinkManager.GetPlayer(guildID) ?? await _lavalinkManager.JoinAsync(voiceChannelToJoin);
-                    LoadTracksResponse response = await _lavalinkManager.GetTracksAsync("http://eu10.fastcast4u.com:3180/");
-                    
-                    LavalinkTrack track = response.Tracks.First();
-                    await player.PlayAsync(track);
+                    await message.Channel.SendMessageAsync("There are no voice channels on this server");
                 }
                 else
                 {
-                    // todo join first voice channel as a fallback
-                    // handle if there's no voice channels
-                    await message.Channel.SendMessageAsync("You are not in a voice channel - Join a voice channel first");
+                    await player.SetVolumeAsync(DefaultAudioVolume);
+                    await PlayRadio(player, RadioChannel.Radio101);
+                }
+            }
+            else if (message.Content.Equals("!radio"))
+            {
+                string radioList = "!otvoreni - Otvoreni radio\n" + 
+                    "!radio101 - Radio 101";
+                await message.Channel.SendMessageAsync(radioList);
+            }
+            else if (message.Content.StartsWith("!yt"))
+            {
+                LavalinkPlayer player = _lavalinkManager.GetPlayer(guildID) ?? await JoinSenderVoiceChannel(guildID, senderID);
+                String[] ytArgs = message.Content.Split(' ');
+
+                if (ytArgs.GetLength(0) >= 2)
+                {
+                    if (player == null)
+                    {
+                        await message.Channel.SendMessageAsync("There are no voice channels on this server");
+                        return;
+                    }
+
+                    string youtubeUrl = ytArgs[1];
+                    LoadTracksResponse response = await _lavalinkManager.GetTracksAsync(youtubeUrl);
+                    //response.Tracks.Append<LavalinkTrack>(new LavalinkTrack());
+                    
+                    LavalinkTrack track = response.Tracks.First();
+                    await player.PlayAsync(track);
+                    
+                }
+                else if (ytArgs.Length == 1)
+                {
+                    await message.Channel.SendMessageAsync("!yt plays youtube. Example: !yt https://www.youtube.com/watch?v=somevideoonyoutube");
                 }
             }
             else if (message.Content.StartsWith("!vol"))
@@ -82,7 +87,7 @@ namespace Chachanka
                 if (player != null)
                 {
                     String[] volumeArgs = message.Content.Split(' ');
-                    if (volumeArgs.Length >= 2)
+                    if (volumeArgs.GetLength(0) >= 2)
                     {
                         uint newVolume = 0;
                         if (uint.TryParse(volumeArgs[1], out newVolume))
@@ -109,7 +114,8 @@ namespace Chachanka
             }
             else if (message.Content.Equals("!off"))
             {
-                
+                LavalinkPlayer player = _lavalinkManager.GetPlayer(guildID);
+                await player.StopAsync();
             }
             else
             {
@@ -117,7 +123,7 @@ namespace Chachanka
             }
         }
 
-        private async Task<bool> JoinSenderVoiceChannel(ulong guildID, ulong senderID)
+        private async Task<LavalinkPlayer> JoinSenderVoiceChannel(ulong guildID, ulong senderID)
         {
             IReadOnlyCollection<SocketVoiceChannel> voiceChannels = _client.GetGuild(guildID).VoiceChannels;
             SocketVoiceChannel voiceChannelToJoin = null;
@@ -138,13 +144,14 @@ namespace Chachanka
                 if (voiceChannels.Count > 0)
                 {
                     voiceChannelToJoin = voiceChannels.First();
-                    await _lavalinkManager.JoinAsync(voiceChannelToJoin);
-                    return true;
+                    return await _lavalinkManager.JoinAsync(voiceChannelToJoin);
                 }
-                return false;
+                return null;
             }
-
-            return true;
+            else
+            {
+                return await _lavalinkManager.JoinAsync(voiceChannelToJoin);
+            }
         }
 
     }
