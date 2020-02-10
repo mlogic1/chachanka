@@ -29,6 +29,8 @@ namespace Chachanka
 
             _client = new DiscordSocketClient();
             _client.Log += Log;
+            _client.Disconnected += OnDisconnect;
+            
             _client.MessageReceived += OnMessageReceived;
             _client.Ready += InitLavalinkManager;
 
@@ -43,6 +45,12 @@ namespace Chachanka
         {
             Console.WriteLine(msg.ToString());
             WriteLog(msg.ToString());
+            return Task.CompletedTask;
+        }
+
+        private Task OnDisconnect(Exception e)
+        {
+            WriteLog("I disconnected: " + e.Message.ToString());
             return Task.CompletedTask;
         }
 
