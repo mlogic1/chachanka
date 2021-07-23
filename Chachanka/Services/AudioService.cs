@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Chachanka.Utility;
+using Discord;
 using Discord.Audio;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,11 +30,13 @@ namespace Chachanka.Services
 
 		private readonly ConcurrentDictionary<ulong, ServiceVoiceChannel> ConnectedChannels = new ConcurrentDictionary<ulong, ServiceVoiceChannel>();
 		private readonly DiscordSocketClient _client;
+		private readonly ConsoleWriterService _consoleWriter;
 		private const double DEFAULT_VOLUME = 0.02;
 
 		public AudioService(IServiceProvider services)
 		{
 			_client = services.GetRequiredService<DiscordSocketClient>();
+			_consoleWriter = services.GetRequiredService<ConsoleWriterService>();
 		}
 
 		public async Task<IAudioClient> JoinVoiceChannel(IGuild guild, IVoiceChannel target)
@@ -54,7 +57,7 @@ namespace Chachanka.Services
 
 			if (ConnectedChannels.TryAdd(guild.Id, svc))
 			{
-				Console.WriteLine("Joined audio channel");
+				await _consoleWriter.WriteLogAsync("Joined audio channel");
 			}
 			return audioClient;
 		}
@@ -67,7 +70,7 @@ namespace Chachanka.Services
 			{
 				client = svc.client;
 				await client.StopAsync();
-				Console.WriteLine("Left audio channel");
+				await _consoleWriter.WriteLogAsync("Left audio channel");
 			}
 		}
 
@@ -107,7 +110,7 @@ namespace Chachanka.Services
 					finally
 					{
 						await discord.FlushAsync();
-						Console.WriteLine("Stream ended");
+						await _consoleWriter.WriteLogAsync("Stream ended");
 					}
 				}
 			}
