@@ -10,11 +10,13 @@ namespace Chachanka.Modules
 	{
 		private readonly AudioService _audioService;
 		private readonly ConsoleWriterService _consoleWriter;
+		private readonly WeatherService _weatherService;
 
-		public CommandsModule(AudioService audioService, ConsoleWriterService consoleWriter)
+		public CommandsModule(AudioService audioService, ConsoleWriterService consoleWriter, WeatherService weatherService)
 		{
 			_audioService = audioService;
 			_consoleWriter = consoleWriter;
+			_weatherService = weatherService;
 		}
 
 		[Command("ping")]
@@ -58,6 +60,17 @@ namespace Chachanka.Modules
 
 			double normalizedVolume = num / 100.0;
 			await _audioService.SetVolumeAsync(Context.Guild, normalizedVolume);
+		}
+
+		[Command("weather")]
+		[Alias("vrijeme")]
+		public async Task ReportWeather()
+		{
+			if (Context.Channel == null)
+			{
+				return;
+			}
+			await _weatherService.ReportWeather(Context.Channel);
 		}
 	}
 }

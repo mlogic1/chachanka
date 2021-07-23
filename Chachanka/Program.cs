@@ -49,6 +49,7 @@ namespace Chachanka
 				.AddSingleton<CommandHandlingService>()
 				.AddSingleton<HttpClient>()
 				.AddSingleton<ConsoleWriterService>()
+				.AddSingleton<WeatherService>()
 				.BuildServiceProvider();
 		}
 	}
