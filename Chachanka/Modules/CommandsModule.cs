@@ -62,6 +62,12 @@ namespace Chachanka.Modules
 			await _audioService.SetVolumeAsync(Context.Guild, normalizedVolume);
 		}
 
+		[Command("leave", RunMode = RunMode.Async)]
+		public async Task LeaveChannel(IVoiceChannel channel = null)
+		{
+			await _audioService.LeaveAudioChannel(Context.Guild);
+		}
+
 		[Command("weather")]
 		[Alias("vrijeme")]
 		public async Task ReportWeather()
