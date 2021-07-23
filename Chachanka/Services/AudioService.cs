@@ -8,16 +8,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 
+// TODO
+// Bot throws exceptions when you move him to another channel
+
 namespace Chachanka.Services
 {
 	public class AudioService
 	{
-		private struct ServiceVoiceChannel
+		private class ServiceVoiceChannel
 		{
 			public IAudioClient client;
 			public double volume;
 
-			public ServiceVoiceChannel(IAudioClient client, double volume) : this()
+			public ServiceVoiceChannel(IAudioClient client, double volume)
 			{
 				this.client = client;
 				this.volume = volume;
@@ -108,6 +111,17 @@ namespace Chachanka.Services
 					}
 				}
 			}
+		}
+
+		public Task SetVolumeAsync(IGuild guild, double volume)
+		{
+			ServiceVoiceChannel svc;
+			if (ConnectedChannels.TryGetValue(guild.Id, out svc))
+			{
+				svc.volume = volume;	
+			}
+
+			return Task.CompletedTask;
 		}
 
 		private Process CreateStream(string path)

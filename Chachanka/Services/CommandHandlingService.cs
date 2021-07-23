@@ -58,6 +58,12 @@ namespace Chachanka.Services
 			if (result.IsSuccess)
 				return;
 
+			if (command.Value.Name.Equals("vol"))
+			{
+				await context.Channel.SendMessageAsync("You can change the volume by writing !vol followed by volume amount. `!vol 40`. The value must be between 0 and 100");
+				return;
+			}
+
 			// the command failed, let's notify the user that something happened.
 			await context.Channel.SendMessageAsync($"error: {result}");
 		}

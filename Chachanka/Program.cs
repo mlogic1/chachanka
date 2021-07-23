@@ -1,4 +1,5 @@
 ﻿using Chachanka.Services;
+using Chachanka.Utility;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -47,6 +48,7 @@ namespace Chachanka
 				.AddSingleton<AudioService>()
 				.AddSingleton<CommandHandlingService>()
 				.AddSingleton<HttpClient>()
+				.AddSingleton<ConsoleWriterService>()
 				.BuildServiceProvider();
 		}
 	}
