@@ -2,7 +2,9 @@
 using Chachanka.Utility;
 using Discord;
 using Discord.Commands;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using static Chachanka.Utility.RadioLoader;
 
 namespace Chachanka.Modules
 {
@@ -12,33 +14,35 @@ namespace Chachanka.Modules
 		private readonly ConsoleWriterService _consoleWriter;
 		private readonly WeatherService _weatherService;
 
+		private Dictionary<string, RadioData> _radioList;
+
 		public CommandsModule(AudioService audioService, ConsoleWriterService consoleWriter, WeatherService weatherService)
 		{
 			_audioService = audioService;
 			_consoleWriter = consoleWriter;
 			_weatherService = weatherService;
+			_radioList = LoadRadioList();
 		}
 
 		[Command("ping")]
 		public async Task Ping()
 		{
-			await ReplyAsync("pong!");
+			await ReplyAsync("pong!:white_check_mark:");
 			await _consoleWriter.WriteLogAsync("topkek");
 		}
 
 		[Command("join", RunMode = RunMode.Async)]
-		public async Task JoinChannel(IVoiceChannel channel = null)
+		public async Task<bool> JoinChannel(IVoiceChannel channel = null)
 		{
 			channel = channel ?? (Context.User as IGuildUser)?.VoiceChannel;
 			if (channel == null)
 			{
 				await ReplyAsync("Can't join your voice channel");
-				return;
+				return false;
 			}
 			
-			await Context.Client.SetGameAsync("some music for tryharders");
 			await _audioService.JoinVoiceChannel(Context.Guild, channel);
-			await _audioService.SendAudioAsync(Context.Guild, Context.Channel, "http://194.56.74.7:9302/stream");
+			return true;
 		}
 
 		[Command("vol")]
@@ -77,6 +81,22 @@ namespace Chachanka.Modules
 				return;
 			}
 			await _weatherService.ReportWeather(Context.Channel);
+		}
+
+		[Command("radio", RunMode = RunMode.Async)]
+		public async Task PlayRadio(string radioName)
+		{
+			if (!await JoinChannel())
+			{
+				return;
+			}
+
+
+
+			await _audioService.SendAudioAsync(Context.Guild, Context.Channel, "https://stream.otvoreni.hr/otvoreni");
+			await Context.Client.SetGameAsync("some music for tryharders"); // TODO: something with this
+
+			// return Task.CompletedTask;
 		}
 	}
 }
