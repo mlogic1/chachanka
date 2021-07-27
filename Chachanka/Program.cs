@@ -5,6 +5,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,6 +21,17 @@ namespace Chachanka
 
 		public async Task MainAsync()
 		{
+			string botToken = "";
+			if (File.Exists("token.txt"))
+			{
+				botToken = File.ReadAllText("token.txt");
+			}
+			else
+			{
+				Console.WriteLine("Unable to load bot token");
+				return;
+			}
+
 			using (var services = ConfigureServices())
 			{
 				var client = services.GetRequiredService<DiscordSocketClient>();
@@ -27,7 +39,7 @@ namespace Chachanka
 
 				services.GetRequiredService<CommandService>().Log += LogAsync;
 
-				await client.LoginAsync(TokenType.Bot, "TOKEN-HERE-TODO");
+				await client.LoginAsync(TokenType.Bot, botToken);
 				await client.StartAsync();
 				await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
 				await Task.Delay(Timeout.Infinite);
