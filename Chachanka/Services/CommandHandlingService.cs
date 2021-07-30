@@ -64,6 +64,12 @@ namespace Chachanka.Services
 				return;
 			}
 
+			if (command.Value.Name.Equals("radio"))
+			{
+				await context.Channel.SendMessageAsync("I can play different radios. Select which one by writing !radio followed by radio name. `!radio otvoreni`. Todo complete list of radios");
+				return;
+			}
+
 			// the command failed, let's notify the user that something happened.
 			await context.Channel.SendMessageAsync($"error: {result}");
 		}

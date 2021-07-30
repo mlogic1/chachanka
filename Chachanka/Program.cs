@@ -62,6 +62,7 @@ namespace Chachanka
 				.AddSingleton<HttpClient>()
 				.AddSingleton<ConsoleWriterService>()
 				.AddSingleton<WeatherService>()
+				.AddSingleton<RadioListService>()
 				.BuildServiceProvider();
 		}
 	}

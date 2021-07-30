@@ -7,6 +7,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 // TODO
@@ -20,11 +21,29 @@ namespace Chachanka.Services
 		{
 			public IAudioClient client;
 			public double volume;
+			private CancellationTokenSource tokenSrc;
+			private CancellationToken token;
 
 			public ServiceVoiceChannel(IAudioClient client, double volume)
 			{
 				this.client = client;
 				this.volume = volume;
+			}
+
+			private void CancelActiveStream()
+			{
+				if (tokenSrc != null)
+				{
+					tokenSrc.Cancel();
+				}
+			}
+
+			public Task<CancellationToken> SetupCancellationToken()
+			{
+				CancelActiveStream();
+				tokenSrc = new CancellationTokenSource();
+				token = tokenSrc.Token;
+				return Task.FromResult(token);
 			}
 		}
 
@@ -81,6 +100,7 @@ namespace Chachanka.Services
 			if (ConnectedChannels.TryGetValue(guild.Id, out svc))
 			{
 				client = svc.client;
+				CancellationToken cancellationToken = await svc.SetupCancellationToken();
 				using (var ffmpeg = CreateStream(path))
 				using (var output = ffmpeg.StandardOutput.BaseStream)
 				using (var discord = client.CreatePCMStream(AudioApplication.Mixed))
@@ -104,7 +124,15 @@ namespace Chachanka.Services
 								data[i * 2] = (byte)(sample & 0xff);
 							}
 							Stream strm = new MemoryStream(data);
-							await strm.CopyToAsync(discord);
+							try
+							{
+								await strm.CopyToAsync(discord, cancellationToken);
+							}
+							catch(Exception ex)
+							{
+								ffmpeg.Kill();
+								await strm.FlushAsync();
+							}
 						}
 					}
 					finally

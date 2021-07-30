@@ -2,6 +2,7 @@
 using Chachanka.Utility;
 using Discord;
 using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Chachanka.Utility.RadioLoader;
@@ -13,15 +14,14 @@ namespace Chachanka.Modules
 		private readonly AudioService _audioService;
 		private readonly ConsoleWriterService _consoleWriter;
 		private readonly WeatherService _weatherService;
+		private readonly RadioListService _radioListService;
 
-		private Dictionary<string, RadioData> _radioList;
-
-		public CommandsModule(AudioService audioService, ConsoleWriterService consoleWriter, WeatherService weatherService)
+		public CommandsModule(AudioService audioService, ConsoleWriterService consoleWriter, WeatherService weatherService, RadioListService radioListService)
 		{
 			_audioService = audioService;
 			_consoleWriter = consoleWriter;
 			_weatherService = weatherService;
-			_radioList = LoadRadioList();
+			_radioListService = radioListService;
 		}
 
 		[Command("ping")]
@@ -86,17 +86,24 @@ namespace Chachanka.Modules
 		[Command("radio", RunMode = RunMode.Async)]
 		public async Task PlayRadio(string radioName)
 		{
+			RadioData radioData = null;
+			try
+			{
+				radioData = await _radioListService.GetRadioUrl(radioName);
+			}
+			catch(Exception ex)
+			{
+				await ReplyAsync(ex.Message.ToString());
+				return;
+			}
+			
 			if (!await JoinChannel())
 			{
 				return;
 			}
 
-
-
-			await _audioService.SendAudioAsync(Context.Guild, Context.Channel, "https://stream.otvoreni.hr/otvoreni");
-			await Context.Client.SetGameAsync("some music for tryharders"); // TODO: something with this
-
-			// return Task.CompletedTask;
+			await Context.Client.SetGameAsync($"📻 {radioData.Name}");
+			await _audioService.SendAudioAsync(Context.Guild, Context.Channel, radioData.StreamURL);
 		}
 	}
 }

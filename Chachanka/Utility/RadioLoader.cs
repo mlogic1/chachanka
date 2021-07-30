@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 
 namespace Chachanka.Utility
@@ -18,9 +19,8 @@ namespace Chachanka.Utility
 		{
 			public Dictionary<string, RadioData> Radios { get; set; }
 		}
-		
 
-		public static Dictionary<string, RadioData> LoadRadioList()
+		public static List<RadioData> LoadRadioList()
 		{
 			RadioJsonRoot radioJsonObj = null;
 			if (File.Exists("Radios.json"))
@@ -34,7 +34,7 @@ namespace Chachanka.Utility
 				throw new Exception("Unable to load radio list");
 			}
 
-			return radioJsonObj.Radios;
+			return radioJsonObj.Radios.Values.ToList();
 		}
 	}
 }
