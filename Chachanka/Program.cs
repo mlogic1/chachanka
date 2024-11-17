@@ -10,6 +10,9 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
+// invite link
+// https://discord.com/api/oauth2/authorize?client_id=231087293987946496&permissions=18676770106945&scope=bot
+
 namespace Chachanka
 {
 	class Program
@@ -35,13 +38,18 @@ namespace Chachanka
 			using (var services = ConfigureServices())
 			{
 				var client = services.GetRequiredService<DiscordSocketClient>();
+				
 				client.Log += LogAsync;
+				client.Connected += async () =>
+				{
+					await LogAsync(new Discord.LogMessage(LogSeverity.Info, "Main", "Bot connected"));
+				};
 
-				services.GetRequiredService<CommandService>().Log += LogAsync;
-
+				// services.GetRequiredService<CommandService>().Log += LogAsync;
+				services.GetRequiredService<SlashCommandHandlingService>();
 				await client.LoginAsync(TokenType.Bot, botToken);
 				await client.StartAsync();
-				await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+				// await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
 				await Task.Delay(Timeout.Infinite);
 			}
 		}
@@ -54,14 +62,23 @@ namespace Chachanka
 
 		private ServiceProvider ConfigureServices()
 		{
+			var config = new DiscordSocketConfig()
+			{
+				// GatewayIntents = GatewayIntents.GuildMessages | GatewayIntents.GuildMessageTyping | GatewayIntents.DirectMessages | GatewayIntents.GuildMembers | GatewayIntents.GuildPresences
+				MessageCacheSize = 100
+			};
+
 			return new ServiceCollection()
+				.AddSingleton(config)
+				
 				.AddSingleton<DiscordSocketClient>()
-				.AddSingleton<CommandService>()
+				// .AddSingleton<CommandService>()
 				.AddSingleton<AudioService>()
-				.AddSingleton<CommandHandlingService>()
+				// .AddSingleton<CommandHandlingService>()
+				.AddSingleton<SlashCommandHandlingService>()
 				.AddSingleton<HttpClient>()
 				.AddSingleton<ConsoleWriterService>()
-				.AddSingleton<WeatherService>()
+				// .AddSingleton<WeatherService>()
 				.AddSingleton<RadioListService>()
 				.BuildServiceProvider();
 		}

@@ -41,7 +41,7 @@ namespace Chachanka.Modules
 				return false;
 			}
 			
-			await _audioService.JoinVoiceChannel(Context.Guild, channel);
+			await _audioService.JoinVoiceChannel(Context.Guild.Id, channel);
 			return true;
 		}
 
