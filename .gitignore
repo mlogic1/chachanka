@@ -355,3 +355,5 @@ MigrationBackup/
 # Custom
 token.txt
 .vscode
+
+.DS_Store
