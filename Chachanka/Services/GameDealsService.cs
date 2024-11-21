@@ -20,11 +20,6 @@ namespace chachanka.Services
 		{
 			_logger = loggingService;
 			_dbService = dbService;
-
-			/*Task.Run(() =>
-			{
-				RefreshStoreList().Wait();		// pretty sure it's enough to do this once when the application starts
-			});*/
 		}
 
 		public async Task RefreshStoreList()
@@ -123,11 +118,10 @@ namespace chachanka.Services
 							foreach	(Deal deal in deals)
 							{
 								// if the deal was seen, skip it
-								// otherwise the deal gets added to the good deals
+								// otherwise the deal gets added to the good deals (it gets added by CronBgService)
 								if (!await _dbService.DealExistsInDb(deal))
 								{
 									topDeals.Add(deal);
-									await _dbService.StoreDeal(deal);
 								}
 
 								// once the list has 10 or 20 (or whatever target is) values, BREAK or return, this function should now stop and continue tomorrow or another time

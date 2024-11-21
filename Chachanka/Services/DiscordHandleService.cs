@@ -4,7 +4,6 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using System.Globalization;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace chachanka.Services
 {
@@ -134,8 +133,6 @@ Release date: {releaseDate}";
 
 				await SendEmbedToChannel(242029979909619713, 242029979909619713, builder.Build());
 			};
-
-
 		}
 	}
 }

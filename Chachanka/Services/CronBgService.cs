@@ -1,103 +1,150 @@
-
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using chachanka.Interface;
-using Microsoft.Extensions.Hosting;
+using chachanka.Model.GameDeals;
+using Discord;
 
 namespace chachanka.Services
 {
-	internal class CronBgService : IHostedService
+	// can be invoked with: echo -n $MESSAGE | nc localhost 9001
+
+	internal class CronBgService
 	{
 		private readonly ILoggingService _logger;
 		private readonly GameDealsService _gameDealsService;
 
+		private readonly DiscordHandleService _discordHandleService;
+
+		private readonly DBService _dbService;
+
+		private readonly TcpListener _tcpListener;
+
+		private CancellationTokenSource _cts;
+
 		public bool IsRunning = true;
-		public CronBgService(ILoggingService loggingService, GameDealsService gameDealsService)
+
+		public CronBgService(ILoggingService loggingService, GameDealsService gameDealsService, DiscordHandleService discordHandleService, DBService dbService)
 		{
 			_logger = loggingService;
 			_gameDealsService = gameDealsService;
+			_discordHandleService = discordHandleService;
+			_dbService = dbService;
+			_tcpListener = new TcpListener(IPAddress.Loopback, 9001);
+			_cts = new CancellationTokenSource();
 		}
 
-		/*protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+		~CronBgService()
 		{
-			while(!stoppingToken.IsCancellationRequested)
+			_tcpListener.Stop();
+		}
+
+		public void InitService()
+		{
+			try
 			{
-				// Define the endpoint and create a socket
-				IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 9000);
-				Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+				Task.Run(() => RunInBackground(_cts.Token));
+			}
+			catch(OperationCanceledException ex)
+			{
+				_logger.LogInfo($"[CronBgService] Exception occured: {ex.Message}. Trace: {ex.StackTrace}");
+			}
+		}
 
-				// Bind the socket to the endpoint and start listening
-				listener.Bind(endPoint);
-				listener.Listen(10);
-
-				await _logger.LogInfo("[CronBGService] Accepting connection...");
-
-				Socket handler = listener.Accept();
-
-				// Buffer for incoming data
-				byte[] buffer = new byte[1024];
-				int bytesReceived = handler.Receive(buffer);
-
-				// Convert the data to a string and display it
-				string data = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-				await _logger.LogInfo($"[CronBGService] Received message: {data}");
-
-				if (data.Equals("MySecretMessage"))
+		private async Task RunInBackground(CancellationToken ctoken)
+		{
+			try
+			{
+				_tcpListener.Start();
+				while (!ctoken.IsCancellationRequested)
 				{
-					await _logger.LogInfo("Received a secret message");
+					await _logger.LogInfo("Waiting for a connection");
+					var client = await _tcpListener.AcceptTcpClientAsync();
+					_ = Task.Run(() => HandleMessageAsync(client), ctoken);
+				}
+			}
+			catch (Exception ex)
+			{
+				await _logger.LogInfo(ex.Message);
+			}
+		}
+
+		private async Task HandleMessageAsync(TcpClient client)
+		{
+			using (client)
+			using (var stream = client.GetStream())
+			{
+				var buffer = new byte[1024];
+				var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+				var message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+				await _logger.LogInfo($"Message from network: {message}");
+
+				// check what the message says
+				if (message.Equals("tryhard"))
+				{
+					await NotifyTryhardCommunityWithDeals();
+				}
+			}
+		}
+
+		private async Task NotifyTryhardCommunityWithDeals()
+		{
+			List<Deal> deals = await _gameDealsService.GetCurrentTopDeals();
+			await _dbService.StoreDeals(deals);
+
+			EmbedBuilder builder = new EmbedBuilder()
+			.WithTitle("Best rated deals")
+			.WithDescription("Here's a list of best rated deals I can find at the moment, which i haven't already posted")
+			.WithColor(Color.Blue)
+			.WithFooter("Chachanka Deals Finder")
+			.WithCurrentTimestamp()
+			.WithThumbnailUrl(deals.First().thumb);
+
+			foreach (var deal in deals)
+			{
+				string gameName = deal.title;
+				string store = await _gameDealsService.GetStoreName(deal.storeID);
+				string price = deal.salePrice;
+
+				int idiscount = (int)float.Parse(deal.savings, CultureInfo.InvariantCulture);
+				string discount = idiscount.ToString();
+
+				string releaseDate = "N/A";
+				DateTimeOffset releaseOffset = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate);
+				if (releaseOffset.Year > 1970)
+				{
+					releaseDate = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate).Date.ToShortDateString();
 				}
 
-				// Close the socket
-				handler.Shutdown(SocketShutdown.Both);
-				handler.Close();
-			}
-		}*/
+				string steamRating = "";
 
-		/*public override async Task StopAsync(CancellationToken cancelToken)
-		{
-			await base.StopAsync(cancelToken);
-		}*/
-
-        public Task StartAsync(CancellationToken stoppingToken)
-        {
-            while(!stoppingToken.IsCancellationRequested)
-			{
-				// Define the endpoint and create a socket
-				IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, 9000);
-				Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-				// Bind the socket to the endpoint and start listening
-				listener.Bind(endPoint);
-				listener.Listen(10);
-
-				// await _logger.LogInfo("[CronBGService] Accepting connection...");
-
-				Socket handler = listener.Accept();
-
-				// Buffer for incoming data
-				byte[] buffer = new byte[1024];
-				int bytesReceived = handler.Receive(buffer);
-
-				// Convert the data to a string and display it
-				string data = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-				// await _logger.LogInfo($"[CronBGService] Received message: {data}");
-
-				if (data.Equals("MySecretMessage"))
+				if (deal.steamRatingText != null)
 				{
-					// await _logger.LogInfo("Received a secret message");
+					steamRating += deal.steamRatingText;
+
+					if (deal.steamRatingPercent != null)
+					{
+						steamRating += $" ({deal.steamRatingPercent}%)";
+					}
+				}
+				else
+				{
+					steamRating += "N/A";
 				}
 
-				// Close the socket
-				handler.Shutdown(SocketShutdown.Both);
-				handler.Close();
+				if (deal.salePrice == "0.00")
+				{
+					price = "FREE";
+				}
+				string description = @$"Price:	${price} ({discount}% off)
+Store: {store}
+Steam Rating: {steamRating}
+Release date: {releaseDate}";
+				builder.AddField(gameName, description);
 			}
-			return Task.CompletedTask;
-        }
 
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            return Task.CompletedTask; // Not sure what to put in here
-        }
-    }
+			await _discordHandleService.SendEmbedToChannel(242029979909619713, 242029979909619713, builder.Build());
+		}
+	}
 }

@@ -4,7 +4,6 @@ using chachanka.Interface;
 using chachanka.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 
 static void ConfigureServices(IServiceCollection services)
 {
@@ -24,7 +23,7 @@ static void ConfigureServices(IServiceCollection services)
 	services.AddSingleton<ILoggingService, ConsoleLoggerService>();
 	services.AddSingleton<DBService>();
 	services.AddSingleton<GameDealsService>();
-	// services.AddHostedService<CronBgService>(); // This does not work
+	services.AddSingleton<CronBgService>();
 }
 
 static async Task ProgramMainAsync()
@@ -56,11 +55,12 @@ static async Task ProgramMainAsync()
 
 	if (cronBgService != null)
 	{
-		// await cronBgService.StartAsync(new CancellationToken());
+		cronBgService.InitService();
 	}
 	else
 	{
-		Console.WriteLine("CronBG is ok");
+		Console.WriteLine("CronBG is not ok");
+		Environment.Exit(-1);
 	}
 
 	await Task.Delay(-1);
