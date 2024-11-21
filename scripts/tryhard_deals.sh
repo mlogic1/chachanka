@@ -1,0 +1,1 @@
+echo -n "tryhard" | nc localhost 9001
