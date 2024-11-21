@@ -31,7 +31,7 @@ namespace chachanka.Services
 			_gameDealsService = gameDealsService;
 			_discordHandleService = discordHandleService;
 			_dbService = dbService;
-			_tcpListener = new TcpListener(IPAddress.Loopback, 9001);
+			_tcpListener = new TcpListener(IPAddress.Any, 9001);
 			_cts = new CancellationTokenSource();
 		}
 
@@ -94,7 +94,7 @@ namespace chachanka.Services
 			await _dbService.StoreDeals(deals);
 
 			EmbedBuilder builder = new EmbedBuilder()
-			.WithTitle("Best rated deals")
+			.WithTitle("Chachanka brings the best rated deals")
 			.WithDescription("Here's a list of best rated deals I can find at the moment, which i haven't already posted")
 			.WithColor(Color.Blue)
 			.WithFooter("Chachanka Deals Finder")

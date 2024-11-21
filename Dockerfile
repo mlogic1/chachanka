@@ -17,12 +17,17 @@ RUN dotnet publish ./Chachanka/Chachanka.csproj -c Release -o /app/publish
 # Use the official .NET runtime image as the runtime stage
 FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
 
+EXPOSE 9001
+
 # Set the working directory
 WORKDIR /app
 
 # Copy the build output from the build stage
 
 COPY --from=build /app/publish ./
+COPY ./scripts/* /app/scripts/
+
+RUN chmod +x /app/scripts/*.sh
 
 # Run the application
 ENTRYPOINT ["dotnet", "Chachanka.dll"]

@@ -74,65 +74,6 @@ namespace chachanka.Services
 		{
 			await _client.LoginAsync(TokenType.Bot, _discordBotToken);
 			await _client.StartAsync();
-
-			_client.Ready += async () =>
-			{
-				return;
-				List<Deal> deals = await _gameDealService.GetCurrentTopDeals();
-
-				EmbedBuilder builder = new EmbedBuilder()
-				.WithTitle("Best rated deals")
-				.WithDescription("Here's a list of best rated deals I can find at the moment, which i haven't already posted")
-				.WithColor(Color.Blue)
-				.WithFooter("Chachanka Deals Finder")
-				.WithCurrentTimestamp()
-				.WithThumbnailUrl(deals.First().thumb);
-
-				foreach (var deal in deals)
-				{
-					string gameName = deal.title;
-					string store = await _gameDealService.GetStoreName(deal.storeID);
-					string price = deal.salePrice;
-
-					int idiscount = (int)float.Parse(deal.savings, CultureInfo.InvariantCulture);
-					string discount = idiscount.ToString();
-
-					string releaseDate = "N/A";
-					DateTimeOffset releaseOffset = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate);
-					if (releaseOffset.Year > 1970)
-					{
-						releaseDate = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate).Date.ToShortDateString();
-					}
-
-					string steamRating = "";
-
-					if (deal.steamRatingText != null)
-					{
-						steamRating += deal.steamRatingText;
-
-						if (deal.steamRatingPercent != null)
-						{
-							steamRating += $" ({deal.steamRatingPercent}%)";
-						}
-					}
-					else
-					{
-						steamRating += "N/A";
-					}
-
-					if (deal.salePrice == "0.00")
-					{
-						price = "FREE";
-					}
-					string description = @$"Price:	${price} ({discount}% off)
-Store: {store}
-Steam Rating: {steamRating}
-Release date: {releaseDate}";
-					builder.AddField(deal.title, description);
-				}
-
-				await SendEmbedToChannel(242029979909619713, 242029979909619713, builder.Build());
-			};
 		}
 	}
 }
