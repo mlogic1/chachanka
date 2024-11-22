@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data.SQLite;
 using chachanka.Interface;
 using chachanka.Model.GameDeals;
 using Microsoft.Extensions.Configuration;
@@ -26,7 +21,8 @@ namespace chachanka.Services
 			string connStr = "";
 			if (chachankadb == null)
 			{
-				throw new Exception("Missing environment variable 'ChachankaDB'");
+				connStr = "/tmp/chanka.db"; // default to temp
+				_logger.LogInfo("ChachankaDB defaulting to a temp file");
 			}
 			else
 			{
@@ -71,7 +67,23 @@ namespace chachanka.Services
 											);";
 				using (SQLiteCommand command = new SQLiteCommand(createSeenDeals, _sqliteConn))
 				{
-					command.ExecuteNonQueryAsync();
+					command.ExecuteNonQuery();
+				}
+			}
+
+			if (!TableExists("DealSubscribers"))
+			{
+				string createDealSubscribers = @"CREATE TABLE DealSubscribers(
+											GuildId TEXT,
+											ChannelId TEXT
+											);";
+
+				string indexCreate = @"CREATE UNIQUE INDEX idx_dealsubsribers_gid_cid on DealSubscribers (GuildId, ChannelId);";
+				using (SQLiteCommand command = new SQLiteCommand(createDealSubscribers, _sqliteConn))
+				{
+					command.ExecuteNonQuery();
+					command.CommandText = indexCreate;
+					command.ExecuteNonQuery();
 				}
 			}
 		}

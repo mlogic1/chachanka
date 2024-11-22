@@ -8,17 +8,41 @@ using Microsoft.Extensions.DependencyInjection;
 static void ConfigureServices(IServiceCollection services)
 {
 	// Configure environment
-	// var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production";
+	string[] RequiredEnvVars = new string[]
+	{
+		"BOTToken",
+		"ChachankaDB"
+	};
 
-	var configuration = new ConfigurationBuilder()
-	.SetBasePath(AppContext.BaseDirectory)
-	.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-	.AddJsonFile("appsettings.Development.json", optional: true, reloadOnChange: true)
-	.AddEnvironmentVariables()
-	.Build();
+	bool dockerEnv = Environment.GetEnvironmentVariable("DOCKERIZED") != null;
+
+	var configurationBuilder = new ConfigurationBuilder()
+	.SetBasePath(AppContext.BaseDirectory);
+	if (!dockerEnv)
+	{
+		// not running in docker: use appsettings (or appsettings.Development)
+		configurationBuilder.AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true);
+
+		Console.WriteLine("Not running in docker environment");
+	}
+	configurationBuilder.AddEnvironmentVariables();
+
+	var configuration = configurationBuilder.Build();
+	if (dockerEnv)
+	{
+		Console.WriteLine("Running in docker environment");
+	}
+	// copy over docker variables to the configuration
+	foreach (string envVar in RequiredEnvVars)
+	{
+		if (Environment.GetEnvironmentVariable(envVar) == null)
+		{
+			Console.WriteLine($"Missing environment variable: '{envVar}'");
+			Environment.Exit(-1);
+		}
+	}
 
 	services.AddSingleton<IConfiguration>(configuration);
-
 	services.AddSingleton<DiscordHandleService>();
 	services.AddSingleton<ILoggingService, ConsoleLoggerService>();
 	services.AddSingleton<DBService>();

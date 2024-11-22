@@ -29,5 +29,6 @@ COPY ./scripts/* /app/scripts/
 
 RUN chmod +x /app/scripts/*.sh
 
+ENV DOCKERIZED=1
 # Run the application
 ENTRYPOINT ["dotnet", "Chachanka.dll"]
