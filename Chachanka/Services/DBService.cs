@@ -127,6 +127,82 @@ namespace chachanka.Services
 			return seenDeals;
 		}
 
+		public async Task<List<DealSubscriber>> GetAllDealSubscribers()
+		{
+			List<DealSubscriber> subs = new List<DealSubscriber>();
+			string selectQuery = "SELECT GuildId, ChannelId FROM DealSubscribers;";
+
+			using (SQLiteCommand command = new SQLiteCommand(selectQuery, _sqliteConn))
+			{
+				using (var reader = await command.ExecuteReaderAsync())
+				{
+					while(await reader.ReadAsync())
+					{
+						subs.Add(new DealSubscriber()
+						{
+							GuildId = reader.GetString(0),
+							ChannelId = reader.GetString(1)
+						});
+					}
+				}
+			}
+
+			return subs;
+		}
+
+		public async Task<bool> StoreDealSubscriber(DealSubscriber sub)
+		{
+			try
+			{
+				string insertQuery = "INSERT INTO DealSubscribers(GuildId, ChannelId) VALUES(@p_guildid, @p_channelid)";
+				using (SQLiteCommand command = new SQLiteCommand(insertQuery, _sqliteConn))
+				{
+					command.Parameters.AddWithValue("@p_guildid", sub.GuildId);
+					command.Parameters.AddWithValue("@p_channelid", sub.ChannelId);
+
+					int result = await command.ExecuteNonQueryAsync();
+
+					if (result < 1)
+					{
+						await _logger.LogInfo("[DBService] Inserted 0 rows to DealSubscribers");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogInfo(ex.Message);
+				return false;
+			}
+			return true;
+		}
+
+		public async Task<bool> DeleteDealSubscriber(DealSubscriber sub)
+		{
+			try
+			{
+				string insertQuery = "DELETE FROM DealSubscribers WHERE GuildId = @p_guildid AND ChannelId = @p_channelid;";
+				using (SQLiteCommand command = new SQLiteCommand(insertQuery, _sqliteConn))
+				{
+					command.Parameters.AddWithValue("@p_guildid", sub.GuildId);
+					command.Parameters.AddWithValue("@p_channelid", sub.ChannelId);
+
+					int result = await command.ExecuteNonQueryAsync();
+
+					if (result < 1)
+					{
+						await _logger.LogInfo("[DBService] Deleted 0 rows from DealSubscribers");
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				_logger.LogInfo(ex.Message);
+				return false;
+			}
+
+			return true;
+		}
+
 		public async Task StoreDeal(Deal deal)
 		{
 			try

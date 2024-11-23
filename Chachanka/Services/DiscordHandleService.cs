@@ -72,8 +72,16 @@ namespace chachanka.Services
 
 		public async Task StartService()
 		{
-			await _client.LoginAsync(TokenType.Bot, _discordBotToken);
-			await _client.StartAsync();
+			try
+			{
+				await _client.LoginAsync(TokenType.Bot, _discordBotToken);
+				await _client.StartAsync();
+			}
+			catch(Exception ex)
+			{
+				_logger.LogInfo(ex.Message);
+				Environment.Exit(-1);
+			}
 		}
 	}
 }

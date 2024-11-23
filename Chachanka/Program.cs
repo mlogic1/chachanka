@@ -1,6 +1,4 @@
-﻿// NTfHgUWSRw8W3lQVR_1R3ceFKQlpqYap
-
-using chachanka.Interface;
+﻿using chachanka.Interface;
 using chachanka.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
