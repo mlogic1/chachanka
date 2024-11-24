@@ -1,4 +1,4 @@
-﻿using chachanka.Interface;
+using chachanka.Interface;
 using chachanka.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +18,7 @@ static void ConfigureServices(IServiceCollection services)
 	.SetBasePath(AppContext.BaseDirectory);
 	if (!dockerEnv)
 	{
-		// not running in docker: use appsettings (or appsettings.Development)
+		// not running in docker: use appsettings.Development.json
 		configurationBuilder.AddJsonFile("appsettings.Development.json", optional: false, reloadOnChange: true);
 
 		Console.WriteLine("Not running in docker environment");
@@ -26,14 +26,15 @@ static void ConfigureServices(IServiceCollection services)
 	configurationBuilder.AddEnvironmentVariables();
 
 	var configuration = configurationBuilder.Build();
+
 	if (dockerEnv)
 	{
 		Console.WriteLine("Running in docker environment");
 	}
-	// copy over docker variables to the configuration
+
 	foreach (string envVar in RequiredEnvVars)
 	{
-		if (Environment.GetEnvironmentVariable(envVar) == null)
+		if (configuration[envVar] == null)
 		{
 			Console.WriteLine($"Missing environment variable: '{envVar}'");
 			Environment.Exit(-1);
