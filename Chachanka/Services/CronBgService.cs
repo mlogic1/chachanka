@@ -90,7 +90,15 @@ namespace chachanka.Services
 
 		private async Task NotifyTryhardCommunityWithDeals()
 		{
+			List<DealSubscriber> subs = await _dbService.GetAllDealSubscribers();
+
+			if (subs.Count == 0)
+			{
+				return;
+			}
+
 			List<Deal> deals = await _gameDealsService.GetCurrentTopDeals();
+
 			await _dbService.StoreDeals(deals);
 
 			EmbedBuilder builder = new EmbedBuilder()
@@ -101,50 +109,64 @@ namespace chachanka.Services
 			.WithCurrentTimestamp()
 			.WithThumbnailUrl(deals.First().thumb);
 
-			foreach (var deal in deals)
+			foreach (DealSubscriber sub in subs)
 			{
-				string gameName = deal.title;
-				string store = await _gameDealsService.GetStoreName(deal.storeID);
-				string price = deal.salePrice;
-
-				int idiscount = (int)float.Parse(deal.savings, CultureInfo.InvariantCulture);
-				string discount = idiscount.ToString();
-
-				string releaseDate = "N/A";
-				DateTimeOffset releaseOffset = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate);
-				if (releaseOffset.Year > 1970)
+				builder.Fields.Clear();
+				foreach (var deal in deals)
 				{
-					releaseDate = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate).Date.ToShortDateString();
-				}
+					string gameName = deal.title;
+					string store = await _gameDealsService.GetStoreName(deal.storeID);
+					string price = deal.salePrice;
 
-				string steamRating = "";
+					int idiscount = (int)float.Parse(deal.savings, CultureInfo.InvariantCulture);
+					string discount = idiscount.ToString();
 
-				if (deal.steamRatingText != null)
-				{
-					steamRating += deal.steamRatingText;
-
-					if (deal.steamRatingPercent != null)
+					string releaseDate = "N/A";
+					DateTimeOffset releaseOffset = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate);
+					if (releaseOffset.Year > 1970)
 					{
-						steamRating += $" ({deal.steamRatingPercent}%)";
+						releaseDate = DateTimeOffset.FromUnixTimeSeconds(deal.releaseDate).Date.ToShortDateString();
 					}
-				}
-				else
-				{
-					steamRating += "N/A";
-				}
 
-				if (deal.salePrice == "0.00")
-				{
-					price = "FREE";
-				}
-				string description = @$"Price:	${price} ({discount}% off)
+					string steamRating = "";
+
+					if (deal.steamRatingText != null)
+					{
+						steamRating += deal.steamRatingText;
+
+						if (deal.steamRatingPercent != null)
+						{
+							steamRating += $" ({deal.steamRatingPercent}%)";
+						}
+					}
+					else
+					{
+						steamRating += "N/A";
+					}
+
+					if (deal.salePrice == "0.00")
+					{
+						price = "FREE";
+					}
+					string description = @$"Price:	${price} ({discount}% off)
 Store: {store}
 Steam Rating: {steamRating}
 Release date: {releaseDate}";
-				builder.AddField(gameName, description);
-			}
+					builder.AddField(gameName, description);
+				}
 
-			await _discordHandleService.SendEmbedToChannel(242029979909619713, 242029979909619713, builder.Build());
+				try
+				{
+					ulong guildId = ulong.Parse(sub.GuildId);
+					ulong channelId = ulong.Parse(sub.ChannelId);
+
+					await _discordHandleService.SendEmbedToChannel(guildId, channelId, builder.Build());
+				}
+				catch(Exception ex)
+				{
+					await _logger.LogInfo(ex.Message);
+				}
+			}
 		}
 	}
 }

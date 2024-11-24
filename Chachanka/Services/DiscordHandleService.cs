@@ -79,7 +79,7 @@ namespace chachanka.Services
 			}
 			catch(Exception ex)
 			{
-				_logger.LogInfo(ex.Message);
+				await _logger.LogInfo(ex.Message);
 				Environment.Exit(-1);
 			}
 		}
