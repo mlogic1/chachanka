@@ -1,5 +1,6 @@
-using chachanka.Interface;
+﻿using chachanka.Interface;
 using chachanka.Services;
+using Chachanka.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -47,6 +48,7 @@ static void ConfigureServices(IServiceCollection services)
 	services.AddSingleton<DBService>();
 	services.AddSingleton<GameDealsService>();
 	services.AddSingleton<CronBgService>();
+	services.AddSingleton<SlashCommandHandlingService>();
 }
 
 static async Task ProgramMainAsync()
