@@ -1,8 +1,8 @@
-﻿using chachanka.Interface;
+﻿using Chachanka.Interface;
 using Discord;
 using System.Collections.Concurrent;
 
-namespace chachanka.Services
+namespace Chachanka.Services
 {
 	internal class ConsoleLoggerService : ILoggingService
 	{

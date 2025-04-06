@@ -1,11 +1,11 @@
-﻿using chachanka.Interface;
-using chachanka.Model.GameDeals;
+﻿using Chachanka.Interface;
+using Chachanka.Model.GameDeals;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using System.Globalization;
 
-namespace chachanka.Services
+namespace Chachanka.Services
 {
 	internal class DiscordHandleService
 	{
@@ -33,6 +33,11 @@ namespace chachanka.Services
 			_gameDealService = gameDealService;
 			_client = new DiscordSocketClient();
 			_client.Log += LogConsole;
+		}
+
+		public DiscordSocketClient GetDiscordClient()
+		{
+			return _client;
 		}
 
 		public async Task<bool> SendMessageToChannel(ulong guildId, ulong channelId, string message)

@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Chachanka.Services
 {
-	public class AudioService
+	internal class AudioService
 	{
 		private class ServiceVoiceChannel
 		{
@@ -51,9 +51,9 @@ namespace Chachanka.Services
 		private readonly DiscordSocketClient _client;
 		private const double DEFAULT_VOLUME = 0.02;
 
-		public AudioService(IServiceProvider services)
+		public AudioService(DiscordHandleService discordHandleService)
 		{
-			_client = services.GetRequiredService<DiscordSocketClient>();
+			_client = discordHandleService.GetDiscordClient();
 		}
 
 		public async Task<IAudioClient> JoinVoiceChannel(ulong guildId, IVoiceChannel target)
@@ -216,7 +216,7 @@ namespace Chachanka.Services
 			_ = Task.Run(async () =>
 			{
 				IAudioClient audioClient = await JoinVoiceChannel(guildId, vc);
-				await SendAsync(audioClient, streamURL, guildId); // await SendAsync(audioClient, "D:\\Utility\\youtube-dl\\some-audio.mp3");
+				await SendAsync(audioClient, streamURL, guildId); // await SendAsync(audioClient, "/path/to/some-audio.mp3");
 			});
 
 			await Task.CompletedTask;

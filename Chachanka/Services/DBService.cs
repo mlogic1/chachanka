@@ -1,9 +1,10 @@
 ﻿using System.Data.SQLite;
-using chachanka.Interface;
-using chachanka.Model.GameDeals;
+using Chachanka.Interface;
+using Chachanka.Model.GameDeals;
+using Chachanka.Model.Radio;
 using Microsoft.Extensions.Configuration;
 
-namespace chachanka.Services
+namespace Chachanka.Services
 {
 	internal class DBService
 	{
@@ -80,6 +81,23 @@ namespace chachanka.Services
 
 				string indexCreate = @"CREATE UNIQUE INDEX idx_dealsubsribers_gid_cid on DealSubscribers (GuildId, ChannelId);";
 				using (SQLiteCommand command = new SQLiteCommand(createDealSubscribers, _sqliteConn))
+				{
+					command.ExecuteNonQuery();
+					command.CommandText = indexCreate;
+					command.ExecuteNonQuery();
+				}
+			}
+
+			if (!TableExists("RadioStations"))
+			{
+				string createRadioStation = @"CREATE TABLE RadioStations(
+											ShortName TEXT,
+											LongName TEXT,
+											Url TEXT
+											);";
+
+				string indexCreate = @"CREATE UNIQUE INDEX idx_radiostations_shortid on RadioStations (ShortName);";
+				using (SQLiteCommand command = new SQLiteCommand(createRadioStation, _sqliteConn))
 				{
 					command.ExecuteNonQuery();
 					command.CommandText = indexCreate;
@@ -254,6 +272,30 @@ namespace chachanka.Services
 			{
 				await StoreDeal(deal);
 			}
+		}
+
+		public async Task<List<RadioStation>> GetAllRadioStations()
+		{
+			List<RadioStation> radios = new List<RadioStation>();
+			string selectQuery = "SELECT ShortName, LongName, Url FROM RadioStations;";
+
+			using (SQLiteCommand command = new SQLiteCommand(selectQuery, _sqliteConn))
+			{
+				using (var reader = await command.ExecuteReaderAsync())
+				{
+					while(await reader.ReadAsync())
+					{
+						radios.Add(new RadioStation()
+						{
+							ShortName = reader.GetString(0),
+							LongName = reader.GetString(1),
+							Url = reader.GetString(2)
+						});
+					}
+				}
+			}
+
+			return radios;
 		}
 	}
 }

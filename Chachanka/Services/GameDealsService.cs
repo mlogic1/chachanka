@@ -1,8 +1,8 @@
-﻿using chachanka.Interface;
-using chachanka.Model.GameDeals;
+﻿using Chachanka.Interface;
+using Chachanka.Model.GameDeals;
 using System.Text.Json;
 
-namespace chachanka.Services
+namespace Chachanka.Services
 {
 	internal class GameDealsService
 	{

@@ -2,11 +2,11 @@ using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using chachanka.Interface;
-using chachanka.Model.GameDeals;
+using Chachanka.Interface;
+using Chachanka.Model.GameDeals;
 using Discord;
 
-namespace chachanka.Services
+namespace Chachanka.Services
 {
 	// can be invoked with: echo -n $MESSAGE | nc localhost 9001
 

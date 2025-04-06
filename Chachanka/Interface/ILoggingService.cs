@@ -1,6 +1,6 @@
 ﻿using Discord;
 
-namespace chachanka.Interface
+namespace Chachanka.Interface
 {
 	internal interface ILoggingService
 	{

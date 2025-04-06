@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace chachanka.Model.GameDeals
+namespace Chachanka.Model.GameDeals
 {
 	public class DealSubscriber
 	{

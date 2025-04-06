@@ -1,5 +1,4 @@
-﻿using chachanka.Interface;
-using chachanka.Services;
+﻿using Chachanka.Interface;
 using Chachanka.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -48,6 +47,7 @@ static void ConfigureServices(IServiceCollection services)
 	services.AddSingleton<DBService>();
 	services.AddSingleton<GameDealsService>();
 	services.AddSingleton<CronBgService>();
+	services.AddSingleton<AudioService>();
 	services.AddSingleton<SlashCommandHandlingService>();
 }
 
@@ -62,6 +62,7 @@ static async Task ProgramMainAsync()
 	DBService? dbService = serviceProvider.GetService<DBService>();
 
 	DiscordHandleService? discordHandle = serviceProvider.GetService<DiscordHandleService>();
+	SlashCommandHandlingService? slashCommands = serviceProvider.GetService<SlashCommandHandlingService>();
 
 	if (discordHandle == null)
 	{
@@ -69,6 +70,14 @@ static async Task ProgramMainAsync()
 	}
 
 	await discordHandle.StartService();
+
+
+	if (slashCommands == null)
+	{
+		Environment.Exit(-1);
+	}
+
+	await slashCommands.InitializeAsync();
 
 	GameDealsService? gameDealService = serviceProvider.GetService<GameDealsService>();
 	if (gameDealService != null)

@@ -12,22 +12,22 @@ using System.Threading.Tasks;
 
 namespace Chachanka.Services
 {
-	public class SlashCommandHandlingService
+	internal class SlashCommandHandlingService
 	{
 		// private readonly CommandService _commands;
 		private readonly DiscordSocketClient _discord;
-		private readonly IServiceProvider _services;
 		private readonly AudioService _audioService;
 
-		public SlashCommandHandlingService(IServiceProvider services)
+		private readonly DBService _dbService;
+
+		public SlashCommandHandlingService(DiscordHandleService discordHandleService, AudioService audioService, DBService dbService)
 		{
-			_services = services;
-			_discord = services.GetRequiredService<DiscordSocketClient>();
+			_discord = discordHandleService.GetDiscordClient();
+			_audioService = audioService;
+			_dbService = dbService;
 			_discord.SlashCommandExecuted += OnSlashCommandExecuted;
 
 			_discord.Ready += SetupGlobalSlashCommands;
-
-			_audioService = services.GetRequiredService<AudioService>();
 		}
 
 		private async Task SetupGlobalSlashCommands()
@@ -35,15 +35,13 @@ namespace Chachanka.Services
 			SlashCommandBuilder globalCommandBuilder = new SlashCommandBuilder();
 			SlashCommandOptionBuilder opbuilder = new SlashCommandOptionBuilder();
 
-			opbuilder.WithName("station").WithDescription("Choose your station").WithType(ApplicationCommandOptionType.Integer);
+			opbuilder.WithName("station").WithDescription("Choose your station").WithType(ApplicationCommandOptionType.String);
 
 			/* Radio stations */
-			int i = 0;
-			/*foreach (var station in Globals.RADIO_STATIONS)
+			foreach (var station in await _dbService.GetAllRadioStations())
 			{
-				opbuilder.AddChoice(station.Value.Name, i);
-				++i;
-			}*/
+				opbuilder.AddChoice(station.LongName, station.ShortName);
+			}
 
 			/* volume control */
 			SlashCommandOptionBuilder volOpbuilder = new SlashCommandOptionBuilder();
@@ -87,7 +85,6 @@ namespace Chachanka.Services
 				case "weather":
 					await ProcessWeatherCommand(command);
 					break;
-
 				default:
 					break;
 
@@ -97,6 +94,12 @@ namespace Chachanka.Services
 
 		private async Task ProcessRadioCommand(SocketSlashCommand command)
 		{
+			if (command.Data.Options.Count == 0)
+			{
+				await command.RespondAsync("I can play a radio station. Use the available options when using the `/radio` command to play something.");
+				return;
+			}
+
 			string subcommand = command.Data.Options.ElementAt(0).Name;
 
 			if (subcommand == "station")
@@ -107,7 +110,7 @@ namespace Chachanka.Services
 				}
 				else
 				{
-					Console.WriteLine("Trying to play/change radio station");
+					Console.WriteLine("Play/change radio station");
 					IVoiceChannel vc = (command.User as IGuildUser)?.VoiceChannel;
 					IGuild guild = (command.User as IGuildUser).Guild;
 					ulong guildId = (command.User as IGuildUser).GuildId;
@@ -120,7 +123,7 @@ namespace Chachanka.Services
 
 						try
 						{
-							// await _audioService.PlayRadioStream(guildId, vc, streamURL);
+							await _audioService.PlayRadioStream(guildId, vc, streamURL);
 						}
 						catch (Exception exception)
 						{
@@ -141,7 +144,6 @@ namespace Chachanka.Services
 				await _audioService.SetVolumeAsync(guild, 0.6);
 				await command.RespondAsync("Changing volume");
 			}
-
 		}
 
 		private async Task ProcessWeatherCommand(SocketSlashCommand command)
@@ -149,11 +151,11 @@ namespace Chachanka.Services
 			await Task.CompletedTask;
 		}
 
-		/*public async Task InitializeAsync()
+		public async Task InitializeAsync()
 		{
 			// Register modules that are public and inherit ModuleBase<T>.
-			await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-		}*/
+			// await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+		}
 
 		public async Task MessageReceivedAsync(SocketMessage rawMessage)
 		{
