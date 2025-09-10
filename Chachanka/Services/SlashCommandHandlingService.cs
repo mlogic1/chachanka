@@ -1,14 +1,8 @@
 ﻿using Discord;
-using Discord.Audio;
 using Discord.Commands;
 using Discord.Net;
 using Discord.WebSocket;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using System;
-using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Chachanka.Services
 {

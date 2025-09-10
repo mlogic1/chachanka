@@ -1,5 +1,5 @@
 # Use the official .NET SDK image as a build stage
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
 # Set the working directory
 WORKDIR /app
@@ -15,7 +15,7 @@ COPY Chachanka/ ./Chachanka/
 RUN dotnet publish ./Chachanka/Chachanka.csproj -c Release -o /app/publish
 
 # Use the official .NET runtime image as the runtime stage
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS runtime
 
 EXPOSE 9001
 
