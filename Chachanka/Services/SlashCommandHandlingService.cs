@@ -29,7 +29,7 @@ namespace Chachanka.Services
 			SlashCommandBuilder globalCommandBuilder = new SlashCommandBuilder();
 			SlashCommandOptionBuilder opbuilder = new SlashCommandOptionBuilder();
 
-			opbuilder.WithName("station").WithDescription("Choose your station").WithType(ApplicationCommandOptionType.String);
+			opbuilder.WithName("channel").WithDescription("Choose your channel").WithType(ApplicationCommandOptionType.String);
 
 			/* Radio stations */
 			foreach (var station in await _dbService.GetAllRadioStations())
@@ -45,13 +45,12 @@ namespace Chachanka.Services
 			SlashCommandOptionBuilder weatherOpBuilder = new SlashCommandOptionBuilder();
 			weatherOpBuilder.WithName("weather").WithDescription("Get weather forecast").WithType(ApplicationCommandOptionType.String);
 
-			Console.WriteLine("Setting up slash commands");
+			Console.WriteLine("Setting up slash commands now");
 			globalCommandBuilder
-				.WithName("radio")
-				.WithDescription("Play live radio in your channel.")
+				.WithName("music")
+				.WithDescription("Play live music in your channel.")
 				.AddOption(opbuilder)
 				.AddOption(volOpbuilder);
-				// .AddOption(weatherOpBuilder) // move this to a seperate slash command
 
 			try
 			{
@@ -90,7 +89,7 @@ namespace Chachanka.Services
 		{
 			if (command.Data.Options.Count == 0)
 			{
-				await command.RespondAsync("I can play a radio station. Use the available options when using the `/radio` command to play something.");
+				await command.RespondAsync("I can play a music station. Use the available options when using the `/music` command to play something.");
 				return;
 			}
 

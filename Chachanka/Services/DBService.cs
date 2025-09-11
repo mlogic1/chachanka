@@ -295,6 +295,28 @@ namespace Chachanka.Services
 				}
 			}
 
+			// add predefined radios:
+			radios.Add(new RadioStation()
+			{
+				ShortName = "penguin_aardshock",
+				LongName = "Penguin Aardshock",
+				Url = "https://streams.pinguinradio.com/Aardschok192.mp3"
+			});
+
+			radios.Add(new RadioStation()
+			{
+				ShortName = "80s_alive",
+				LongName = "80s Alive",
+				Url = "https://stream.80sa.live/80s-alive.mp3"
+			});
+
+			radios.Add(new RadioStation()
+			{
+				ShortName = "groove_salad",
+				LongName = "Groove Salad",
+				Url = "https://ice4.somafm.com/groovesalad-64-aac"
+			});
+
 			return radios;
 		}
 	}
